@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オセロ - CPU対戦</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .board-cell { transition: all 0.2s; }
+    .board-cell:hover { transform: scale(1.05); }
+    .disk { transition: transform 0.3s ease; }
+    .disk-placed { animation: pop 0.3s ease; }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .thinking { animation: pulse 1s infinite; }
+    .valid-move::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 3px dashed rgba(255,255,255,0.6);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-green-900 to-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-2xl">
+    <!-- ヘッダー -->
+    <div class="text-center mb-6">
+      <h1 class="text-4xl font-bold text-white drop-shadow-lg">♟ オセロ</h1>
+      <p class="text-green-300 mt-1 text-sm">CPU対戦モード</p>
+    </div>
+
+    <!-- コントロールパネル -->
+    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-4 shadow-xl border border-white/20">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-white font-semibold">難易度:</span>
+          <select id="difficulty" class="bg-gray-800 text-white rounded-lg px-3 py-1.5 border border-green-500/30 focus:outline-none focus:ring-2 focus:ring-green-400">
+            <option value="0">かんたん</option>
+            <option value="1">ふつう</option>
+            <option value="2">むずかしい</option>
+            <option value="3">エキスパート</option>
+          </select>
+          <button id="newGameBtn" class="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-1.5 rounded-lg transition shadow-lg">
+            新しいゲーム
+          </button>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="text-center">
+            <div class="w-5 h-5 rounded-full bg-black inline-block border border-gray-400"></div>
+            <span class="text-white ml-1 font-semibold" id="blackScore">2</span>
+          </div>
+          <div class="text-center">
+            <div class="w-5 h-5 rounded-full bg-white inline-block border border-gray-400"></div>
+            <span class="text-white ml-1 font-semibold" id="whiteScore">2</span>
+          </div>
+          <div id="turnIndicator" class="text-yellow-300 font-bold text-sm">あなたの番</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 思考中インジケーター -->
+    <div id="thinkingIndicator" class="hidden mb-3 flex items-center gap-2 bg-blue-900/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-blue-400/30">
+      <div class="w-3 h-3 bg-blue-400 rounded-full thinking"></div>
+      <span class="text-blue-200 text-sm">CPUが考えています...</span>
+      <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden ml-2">
+        <div id="thinkingProgress" class="h-full bg-blue-400 rounded-full" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- ボード -->
+    <div class="bg-green-800/80 backdrop-blur-sm rounded-2xl p-3 shadow-2xl border border-green-600/30">
+      <div id="board" class="grid grid-cols-8 gap-1 aspect-square select-none"></div>
+    </div>
+
+    <!-- メッセージ -->
+    <div id="message" class="mt-4 text-center text-white text-lg font-semibold min-h-[2rem]"></div>
+  </div>
+
+  <script>
+    // ====== オセロエンジン ======
+    const BOARD_SIZE = 8;
+    const EMPTY = 0, BLACK = 1, WHITE = 2;
+
+    function createBoard() {
+      const board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(EMPTY));
+      board[3][3] = WHITE; board[3][4] = BLACK;
+      board[4][3] = BLACK; board[4][4] = WHITE;
+      return board;
+    }
+
+    function cloneBoard(board) {
+      return board.map(row => [...row]);
+    }
+
+    function opponent(player) {
+      return player === BLACK ? WHITE : BLACK;
+    }
+
+    function isValidMove(board, row, col, player) {
+      if (board[row][col] !== EMPTY) return false;
+      const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+      for (const [dr, dc] of dirs) {
+        let r = row + dr, c = col + dc;
+        let found = false;
+        while (r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] === opponent(player)) {
+          r += dr; c += dc;
+          found = true;
+        }
+        if (found && r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] === player) return true;
+      }
+      return false;
+    }
+
+    function getValidMoves(board, player) {
+      const moves = [];
+      for (let r = 0; r < 8; r++)
+        for (let c = 0; c < 8; c++)
+          if (isValidMove(board, r, c, player)) moves.push([r, c]);
+      return moves;
+    }
+
+    function getFlipped(board, row, col, player) {
+      const flipped = [];
+      const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+      for (const [dr, dc] of dirs) {
+        let r = row + dr, c = col + dc;
+        const temp = [];
+        while (r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] === opponent(player)) {
+          temp.push([r, c]);
+          r += dr; c += dc;
+        }
+        if (r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] === player) {
+          flipped.push(...temp);
+        }
+      }
+      return flipped;
+    }
+
+    function makeMove(board, row, col, player) {
+      const newBoard = cloneBoard(board);
+      newBoard[row][col] = player;
+      const flipped = getFlipped(board, row, col, player);
+      for (const [r, c] of flipped) newBoard[r][c] = player;
+      return newBoard;
+    }
+
+    function countDisks(board) {
+      let black = 0, white = 0;
+      for (let r = 0; r < 8; r++)
+        for (let c = 0; c < 8; c++) {
+          if (board[r][c] === BLACK) black++;
+          else if (board[r][c] === WHITE) white++;
+        }
+      return { black, white };
+    }
+
+    // ====== 評価関数 ======
+    const WEIGHTS = [
+      [100, -20,  10,   5,   5,  10, -20, 100],
+      [-20, -50,  -2,  -2,  -2,  -2, -50, -20],
+      [ 10,  -2,   1,   1,   1,   1,  -2,  10],
+      [  5,  -2,   1,   0,   0,   1,  -2,   5],
+      [  5,  -2,   1,   0,   0,   1,  -2,   5],
+      [ 10,  -2,   1,   1,   1,   1,  -2,  10],
+      [-20, -50,  -2,  -2,  -2,  -2, -50, -20],
+      [100, -20,  10,   5,   5,  10, -20, 100]
+    ];
+
+    function evaluateBoard(board, player) {
+      let score = 0;
+      const opp = opponent(player);
+      for (let r = 0; r < 8; r++)
+        for (let c = 0; c < 8; c++) {
+          if (board[r][c] === player) score += WEIGHTS[r][c];
+          else if (board[r][c] === opp) score -= WEIGHTS[r][c];
+        }
+      // 手数ボーナス
+      const myMoves = getValidMoves(board, player).length;
+      const oppMoves = getValidMoves(board, opp).length;
+      score += (myMoves - oppMoves) * 5;
+      // 終盤は確定石
+      const total = countDisks(board);
+      const totalDisks = total.black + total.white;
+      if (totalDisks > 50) {
+        const parity = (totalDisks % 2 === 0) ? 1 : -1;
+        score += parity * 10;
+      }
+      return score;
+    }
+
+    // ====== MiniMax with Alpha-Beta ======
+    function minimax(board, depth, alpha, beta, maximizing, player, maxDepth) {
+      if (depth === 0) return { score: evaluateBoard(board, player) };
+      const moves = getValidMoves(board, player);
+      if (moves.length === 0) {
+        const oppMoves = getValidMoves(board, opponent(player));
+        if (oppMoves.length === 0) {
+          const { black, white } = countDisks(board);
+          const diff = (player === BLACK ? black - white : white - black) * 1000;
+          return { score: diff };
+        }
+        return minimax(board, depth - 1, alpha, beta, !maximizing, opponent(player), maxDepth);
+      }
+
+      let bestMove = null;
+      if (maximizing) {
+        let maxEval = -Infinity;
+        for (const [r, c] of moves) {
+          const newBoard = makeMove(board, r, c, player);
+          const result = minimax(newBoard, depth - 1, alpha, beta, false, opponent(player), maxDepth);
+          if (result.score > maxEval) {
+            maxEval = result.score;
+            bestMove = [r, c];
+          }
+          alpha = Math.max(alpha, maxEval);
+          if (beta <= alpha) break;
+        }
+        return { score: maxEval, move: bestMove };
+      } else {
+        let minEval = Infinity;
+        for (const [r, c] of moves) {
+          const newBoard = makeMove(board, r, c, player);
+          const result = minimax(newBoard, depth - 1, alpha, beta, true, opponent(player), maxDepth);
+          if (result.score < minEval) {
+            minEval = result.score;
+            bestMove = [r, c];
+          }
+          beta = Math.min(beta, minEval);
+          if (beta <= alpha) break;
+        }
+        return { score: minEval, move: bestMove };
+      }
+    }
+
+    function getCPUMove(board, player, difficulty) {
+      const moves = getValidMoves(board, player);
+      if (moves.length === 0) return null;
+      if (difficulty === 0) {
+        // ランダム
+        return moves[Math.floor(Math.random() * moves.length)];
+      }
+      const depths = [1, 2, 4, 6];
+      const depth = depths[difficulty] || 1;
+      const result = minimax(board, depth, -Infinity, Infinity, true, player, depth);
+      return result.move || moves[0];
+    }
+
+    // ====== ゲーム管理 ======
+    let board = createBoard();
+    let currentPlayer = BLACK;
+    let gameOver = false;
+    let difficulty = 1;
+
+    const boardEl = document.getElementById('board');
+    const blackScoreEl = document.getElementById('blackScore');
+    const whiteScoreEl = document.getElementById('whiteScore');
+    const turnIndicatorEl = document.getElementById('turnIndicator');
+    const messageEl = document.getElementById('message');
+    const thinkingIndicator = document.getElementById('thinkingIndicator');
+    const thinkingProgress = document.getElementById('thinkingProgress');
+    const difficultySelect = document.getElementById('difficulty');
+    const newGameBtn = document.getElementById('newGameBtn');
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      const validMoves = (currentPlayer === BLACK && !gameOver) ? getValidMoves(board, BLACK) : [];
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'board-cell relative bg-green-700/50 rounded-lg flex items-center justify-center cursor-pointer';
+          if (board[r][c] === BLACK) {
+            const disk = document.createElement('div');
+            disk.className = 'disk w-4/5 h-4/5 rounded-full bg-black shadow-inner';
+            cell.appendChild(disk);
+          } else if (board[r][c] === WHITE) {
+            const disk = document.createElement('div');
+            disk.className = 'disk w-4/5 h-4/5 rounded-full bg-white shadow-inner';
+            cell.appendChild(disk);
+          } else if (validMoves.some(([vr, vc]) => vr === r && vc === c)) {
+            cell.classList.add('valid-move');
+            const hint = document.createElement('div');
+            hint.className = 'w-3 h-3 rounded-full bg-green-300/50';
+            cell.appendChild(hint);
+          }
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener('click', () => handleCellClick(r, c));
+          boardEl.appendChild(cell);
+        }
+      }
+      const scores = countDisks(board);
+      blackScoreEl.textContent = scores.black;
+      whiteScoreEl.textContent = scores.white;
+      turnIndicatorEl.textContent = currentPlayer === BLACK ? 'あなたの番' : 'CPUの番';
+      if (gameOver) {
+        turnIndicatorEl.textContent = 'ゲーム終了';
+        if (scores.black > scores.white) messageEl.textContent = '🎉 あなたの勝ち！';
+        else if (scores.white > scores.black) messageEl.textContent = '😢 CPUの勝ち...';
+        else messageEl.textContent = '🤝 引き分け！';
+      } else {
+        messageEl.textContent = '';
+      }
+    }
+
+    function handleCellClick(row, col) {
+      if (gameOver || currentPlayer !== BLACK) return;
+      if (!isValidMove(board, row, col, BLACK)) return;
+      board = makeMove(board, row, col, BLACK);
+      currentPlayer = WHITE;
+      renderBoard();
+      if (!gameOver && currentPlayer === WHITE) {
+        setTimeout(cpuTurn, 300);
+      }
+    }
+
+    function cpuTurn() {
+      const moves = getValidMoves(board, WHITE);
+      if (moves.length === 0) {
+        const blackMoves = getValidMoves(board, BLACK);
+        if (blackMoves.length === 0) {
+          gameOver = true;
+          renderBoard();
+          return;
+        }
+        currentPlayer = BLACK;
+        renderBoard();
+        return;
+      }
+      thinkingIndicator.classList.remove('hidden');
+      thinkingProgress.style.width = '0%';
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress = Math.min(progress + Math.random() * 15, 95);
+        thinkingProgress.style.width = progress + '%';
+      }, 100);
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        thinkingProgress.style.width = '100%';
+        setTimeout(() => {
+          thinkingIndicator.classList.add('hidden');
+          const move = getCPUMove(board, WHITE, difficulty);
+          if (move) {
+            board = makeMove(board, move[0], move[1], WHITE);
+          }
+          currentPlayer = BLACK;
+          const blackMoves = getValidMoves(board, BLACK);
+          if (blackMoves.length === 0) {
+            const whiteMoves = getValidMoves(board, WHITE);
+            if (whiteMoves.length === 0) {
+              gameOver = true;
+            } else {
+              currentPlayer = WHITE;
+              setTimeout(cpuTurn, 300);
+            }
+          }
+          renderBoard();
+          if (!gameOver && currentPlayer === WHITE) {
+            setTimeout(cpuTurn, 300);
+          }
+        }, 200);
+      }, 500 + Math.random() * 1000);
+    }
+
+    function newGame() {
+      board = createBoard();
+      currentPlayer = BLACK;
+      gameOver = false;
+      difficulty = parseInt(difficultySelect.value);
+      renderBoard();
+      messageEl.textContent = '';
+      thinkingIndicator.classList.add('hidden');
+    }
+
+    difficultySelect.addEventListener('change', newGame);
+    newGameBtn.addEventListener('click', newGame);
+
+    newGame();
+  </script>
+</body>
+</html>
