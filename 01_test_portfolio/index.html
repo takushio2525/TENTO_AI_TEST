@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポートフォリオ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .profile-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .work-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .work-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glow {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .avatar {
+            border: 4px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased">
+    <!-- ヘッダー -->
+    <header
+        class="bg-gradient-to-r from-purple-600 via-blue-500 to-indigo-600 text-white py-16 px-4 text-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+            <div class="absolute bottom-10 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl"></div>
+        </div>
+        <div class="relative z-10">
+            <h1 class="text-5xl md:text-6xl font-bold mb-4 tracking-tight">
+                <span class="inline-block animate-pulse">✦</span> ポートフォリオ <span
+                    class="inline-block animate-pulse">✦</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-white/80 font-light">プログラマー / クリエイター</p>
+            <div class="mt-6 flex justify-center gap-4">
+                <span class="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm text-sm">💻 HTML</span>
+                <span class="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm text-sm">🎨 CSS</span>
+                <span class="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm text-sm">✨ Tailwind</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-16">
+        <!-- プロフィール -->
+        <section class="profile-card rounded-3xl p-8 md:p-12 shadow-xl mb-16">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="shrink-0">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=portfolio" alt="アバター"
+                        class="w-40 h-40 rounded-full avatar">
+                </div>
+                <div class="text-center md:text-left">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        こんにちは！ <span class="gradient-text">○○ ○○</span> です
+                    </h2>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        プログラミングとものづくりが大好きで、毎日新しいことに挑戦しています。<br>
+                        このサイトでは、私が作った作品や勉強したことを紹介しています。
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
+                        <span
+                            class="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">#デザイン思考</span>
+                        <span
+                            class="px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">#プログラミング</span>
+                        <span
+                            class="px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">#ものづくり</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 作品一覧 -->
+        <section>
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-2">作品一覧</h2>
+                <p class="text-gray-500">これまでに作った作品を紹介します</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <article class="work-card bg-white rounded-2xl overflow-hidden shadow-lg">
+                    <div class="h-48 bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
+                        <span class="text-6xl">🛒</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">自動販売機の設計図</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            プログラムの設計図を作るワークショップに参加しました。自動販売機の動きを分解して、フローチャートで表現しました。
+                        </p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-xs text-gray-400">2025年1月</span>
+                            <button
+                                class="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all duration-300">
+                                詳細を見る →
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="work-card bg-white rounded-2xl overflow-hidden shadow-lg">
+                    <div class="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                        <span class="text-6xl">🎮</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">オリジナルゲーム設計</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            自分で考えたゲームのルールや動きを設計図にまとめました。次はプログラミングで実装に挑戦します！
+                        </p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-xs text-gray-400">2025年2月</span>
+                            <button
+                                class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all duration-300">
+                                詳細を見る →
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="work-card bg-white rounded-2xl overflow-hidden shadow-lg">
+                    <div class="h-48 bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <span class="text-6xl">🌐</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ポートフォリオサイト</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            このサイトです！HTML, CSS, Tailwind CSS を使って自分だけのウェブページを作りました。レスポンシブデザインにも対応。
+                        </p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-xs text-gray-400">2025年3月</span>
+                            <button
+                                class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all duration-300">
+                                詳細を見る →
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- スキルセクション -->
+        <section class="mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-2">スキル</h2>
+                <p class="text-gray-500">現在勉強中のスキルです</p>
+            </div>
+            <div class="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="text-center p-4">
+                        <div
+                            class="w-16 h-16 mx-auto rounded-full bg-indigo-100 flex items-center justify-center text-2xl mb-3">
+                            🌐</div>
+                        <h4 class="font-bold text-gray-800">HTML/CSS</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-indigo-500 h-2 rounded-full" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center p-4">
+                        <div
+                            class="w-16 h-16 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-2xl mb-3">
+                            🎨</div>
+                        <h4 class="font-bold text-gray-800">Tailwind</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center p-4">
+                        <div
+                            class="w-16 h-16 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-2xl mb-3">
+                            🧩</div>
+                        <h4 class="font-bold text-gray-800">設計思考</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-purple-500 h-2 rounded-full" style="width: 70%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center p-4">
+                        <div
+                            class="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center text-2xl mb-3">
+                            ✨</div>
+                        <h4 class="font-bold text-gray-800">創造力</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-800 text-white py-8 text-center">
+        <p class="text-gray-400 text-sm">&copy; 2025 ポートフォリオサイト - Made with ❤️</p>
+        <p class="text-gray-500 text-xs mt-2">Built with HTML, Tailwind CSS & Creativity</p>
+    </footer>
+</body>
+
+</html>
